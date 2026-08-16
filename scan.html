@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Product - Firebase AI</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- TensorFlow.js & MobileNet -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: #eef2f5; padding: 20px; }
+        .box { background: white; padding: 25px; border-radius: 10px; margin: 20px auto; max-width: 450px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        video { width: 100%; max-width: 400px; border-radius: 8px; border: 2px solid #ccc; background: #000; }
+        button { background: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-size: 16px; width: 100%; margin-top: 15px; font-weight: bold; }
+        button:hover { background: #218838; }
+        .back-link { display: inline-block; margin-bottom: 15px; color: #555; text-decoration: none; font-weight: bold; }
+        #scanStatus { font-size: 18px; font-weight: bold; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <a href="index.html" class="back-link">⬅ Home Dashboard</a>
+        <h2>📷 Scan Product</h2>
+        
+        <video id="video" autoplay playsinline></video><br>
+        <button onclick="scanProduct()">Product Scan Karein</button>
+        
+        <p id="scanStatus">AI Model Load Ho Raha Hai...</p>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAiEiy73LD0QkV8l5-ATgzzWIXgNPqPx8M",
+            authDomain: "image-recog-1773a.firebaseapp.com",
+            projectId: "image-recog-1773a",
+            storageBucket: "image-recog-1773a.firebasestorage.app",
+            messagingSenderId: "527711155398",
+            appId: "1:527711155398:web:25dbca20925aeb813113c7"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let model;
+        mobilenet.load().then(m => { 
+            model = m; 
+            document.getElementById('scanStatus').innerText = "✅ Ready to Scan!";
+        });
+
+        const video = document.getElementById('video');
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(stream => video.srcObject = stream)
+            .catch(err => alert("Camera permission zaroori hai!"));
+
+        function cosineSimilarity(a, b) {
+            let dotProduct = 0, normA = 0, normB = 0;
+            for (let i = 0; i < a.length; i++) {
+                dotProduct += a[i] * b[i];
+                normA += a[i] * a[i];
+                normB += b[i] * b[i];
+            }
+            return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+        }
+
+        async function scanProduct() {
+            if (!model) return alert("AI Model load hone tak wait karein!");
+
+            const status = document.getElementById('scanStatus');
+            status.innerText = "Scanning & Matching in Firebase...";
+            status.style.color = "blue";
+
+            try {
+                const infer = model.infer(video, 'conv_preds');
+                const scanVector = Array.from(await infer.data());
+                infer.dispose();
+
+                const snapshot = await db.collection("products").get();
+                let bestMatch = null;
+                let highestScore = 0;
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const score = cosineSimilarity(scanVector, data.embedding);
+                    
+                    if (score > highestScore && score > 0.75) {
+                        highestScore = score;
+                        bestMatch = data.productId;
+                    }
+                });
+
+                if (bestMatch) {
+                    status.innerText = "✅ Product Mil Gaya: " + bestMatch + " (" + Math.round(highestScore * 100) + "% match)";
+                    status.style.color = "green";
+                } else {
+                    status.innerText = "❌ Match Nahi Mila!";
+                    status.style.color = "red";
+                }
+            } catch(err) {
+                status.innerText = "❌ Scan Error!";
+                status.style.color = "red";
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>

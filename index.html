@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product AI Recognizer</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #eef2f5; margin: 0; padding: 40px 20px; }
+        h1 { color: #333; margin-bottom: 10px; }
+        p { color: #666; margin-bottom: 30px; }
+        .card-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .card { background: white; padding: 30px; border-radius: 12px; width: 260px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); text-align: center; }
+        .card h2 { margin-top: 0; color: #2c3e50; }
+        .btn { display: inline-block; padding: 12px 24px; background: #007bff; color: white; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 15px; }
+        .btn-green { background: #28a745; }
+        .btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <h1>Product AI Recognition System</h1>
+    <p>Apna option chuniye:</p>
+
+    <div class="card-container">
+        <div class="card">
+            <h2>➕ Add Product</h2>
+            <p>Product ki photo upload karke use database mein save karein.</p>
+            <a href="add_product.html" class="btn">Add Product Page</a>
+        </div>
+
+        <div class="card">
+            <h2>📷 Scan Product</h2>
+            <p>Camera se scan karke product ko AI se pehchanein.</p>
+            <a href="scan.html" class="btn btn-green">Scan Page</a>
+        </div>
+    </div>
+
+</body>
+</html>
